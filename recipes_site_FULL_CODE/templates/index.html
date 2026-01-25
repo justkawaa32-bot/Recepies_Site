@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Кулинарные рецепты</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f4f4;
+            color: #222;
+        }
+        header {
+            background: #ff7043;
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+        header a {
+            margin-left: auto;
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 10px;
+        }
+        .recipe {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        .recipe h3 {
+            margin-top: 0;
+        }
+        .meta {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        ul, ol {
+            padding-left: 20px;
+        }
+        img {
+            max-width: 100%;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        footer {
+            text-align: center;
+            padding: 15px;
+            color: #777;
+            font-size: 13px;
+        }
+        .header {
+    background: #ff7043;
+    color: white;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    margin: 0;
+    font-size: 22px;
+}
+
+.auth-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.auth-area a,
+.auth-area button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.auth-area a:hover,
+.auth-area button:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <h1 class="logo">Кулинарные рецепты</h1>
+    <div id="authArea" class="auth-area"></div>
+</header>
+
+
+
+<div class="container">
+    <h2>Список рецептов</h2>
+    <div id="recipes">Загрузка...</div>
+</div>
+
+<footer>
+    Проект по информатике, 10 класс
+</footer>
+
+<script>
+    async function loadRecipes() {
+        try {
+            const response = await fetch('/api/recipes', { credentials: 'include' });
+            const data = await response.json();
+
+            const container = document.getElementById('recipes');
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = '<p>Рецептов пока нет.</p>';
+                return;
+            }
+
+            data.forEach(r => {
+                const div = document.createElement('div');
+                div.className = 'recipe';
+
+                div.innerHTML = `
+                    ${r.img ? `<img src="${r.img}" alt="">` : ''}
+                    <h3>${escapeHtml(r.title)}</h3>
+                    <div class="meta">
+                        Категория: ${escapeHtml(r.category || '—')} |
+                        Время: ${r.time || 0} мин |
+                        Сложность: ${escapeHtml(r.level || '—')} |
+                        Автор: ${escapeHtml(r.author || '—')}
+                    </div>
+                    <h4>Ингредиенты:</h4>
+                    <ul>
+                        ${(r.ingredients || []).map(i => `<li>${escapeHtml(i)}</li>`).join('')}
+                    </ul>
+                    <h4>Шаги приготовления:</h4>
+                    <ol>
+                        ${(r.steps || []).map(s => `<li>${escapeHtml(s)}</li>`).join('')}
+                    </ol>
+                `;
+                container.appendChild(div);
+            });
+        } catch (e) {
+            document.getElementById('recipes').innerHTML = '<p>Ошибка загрузки рецептов</p>';
+        }
+    }
+
+    function escapeHtml(text) {
+        return String(text)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;');
+    }
+
+    loadRecipes();
+</script>
+<script>
+    const authArea = document.getElementById('authArea');
+
+    async function checkAuth() {
+        try {
+            const res = await fetch('/api/whoami', {
+                credentials: 'include'
+            });
+            const data = await res.json();
+
+            if (data.ok) {
+                // пользователь вошёл
+                authArea.innerHTML = `
+                    <span>Привет, <b>${escapeHtml(data.user.username)}</b></span>
+                    <button type="button" onclick="logout()">Выйти</button>
+                `;
+            } else {
+                // не вошёл
+                authArea.innerHTML = `<a href="/auth">Войти</a>`;
+            }
+        } catch (e) {
+            authArea.innerHTML = `<a href="/auth">Войти</a>`;
+        }
+    }
+
+    async function logout() {
+        await fetch('/api/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        location.reload();
+    }
+
+    checkAuth();
+</script>
+<script>
+async function logout() {
+    try {
+        const res = await fetch('/api/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
+
+        if (res.ok) {
+            // полностью обновляем страницу и состояние сессии
+            window.location.href = '/';
+        } else {
+            alert('Ошибка выхода');
+        }
+    } catch (e) {
+        alert('Сервер недоступен');
+    }
+}
+</script>
+
+</body>
+</html>
