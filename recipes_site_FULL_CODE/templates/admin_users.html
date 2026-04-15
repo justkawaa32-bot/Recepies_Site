@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Авторизация</title>
+    <title>Админка: пользователи</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="/static/js/theme.js"></script>
     <style>
@@ -10,6 +10,7 @@
             --accent: #ff7043;
             --accent2: #f06232;
             --bg: #f4f4f4;
+            --bg2: #fff4f0;
             --text: #222;
             --muted: #666;
             --card: #ffffff;
@@ -18,16 +19,17 @@
         }
         html[data-theme="dark"] {
             --bg: #0f1115;
+            --bg2: #121522;
             --text: #e7e9ee;
             --muted: #a7acb9;
             --card: #151925;
             --border: rgba(255,255,255,0.12);
             --field: #0f1320;
         }
-        body{
-            margin:0;
+        body {
+            margin: 0;
             font-family: Arial, Helvetica, sans-serif;
-            background: var(--bg);
+            background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 40%, var(--bg) 100%);
             color: var(--text);
         }
         .header {
@@ -135,80 +137,59 @@
         .menu-link:hover {
             background: rgba(255,112,67,0.10);
         }
-        .page {
-            min-height: calc(100vh - 60px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px 0 30px;
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 10px;
         }
-        .box{
+        .card {
             background: var(--card);
-            padding:20px;
-            width:100%;
-            max-width:420px;
-            border-radius:10px;
-            box-shadow:0 6px 18px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            padding: 16px;
         }
-        h2{
-            margin-top:0;
-            text-align:center;
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
-        input{
-            width:100%;
-            padding:10px;
-            margin:8px 0;
-            border-radius:6px;
-            border:1px solid var(--border);
+        .table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        th, td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        select {
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
             background: var(--field);
             color: var(--text);
-            font-size:14px;
         }
-        button{
-            width:100%;
-            padding:10px;
-            margin-top:10px;
-            border:none;
-            border-radius:6px;
+        button {
             background: var(--accent);
-            color:white;
-            font-size:15px;
-            cursor:pointer;
+            color: #fff;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
         }
-        button:hover{
+        button:hover {
             background: var(--accent2);
         }
-        .switch{
-            text-align:center;
-            margin-top:12px;
-            font-size:14px;
-        }
-        .switch a{
-            color:#ff7043;
-            cursor:pointer;
-            text-decoration:none;
-        }
-        .msg{
-            text-align:center;
-            margin-top:10px;
-            font-size:14px;
-            color:red;
-        }
-        .back{
-            text-align:center;
-            margin-top:15px;
-        }
-        .back a{
-            color: var(--muted);
-            font-size:13px;
-            text-decoration:none;
+        .msg {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #c0392b;
         }
         @media (max-width: 520px) {
             .header { padding: 10px 14px; }
-            .page { padding: 12px 0 18px; }
-            .box { border-radius: 12px; padding: 16px; max-width: 94vw; }
-            button { padding: 12px; font-size: 16px; }
-            input { padding: 12px; font-size: 16px; }
+            .container { margin: 14px auto; }
+            .card { padding: 14px; }
+            table { min-width: 520px; }
         }
     </style>
 </head>
@@ -224,25 +205,24 @@
     </button>
 </header>
 
-<div class="page">
-    <div class="box">
-        <h2 id="title">Вход</h2>
-
-        <input id="username" placeholder="Имя пользователя">
-        <input id="password" type="password" placeholder="Пароль">
-
-        <button id="actionBtn">Войти</button>
-
-        <div class="switch">
-            <span id="switchText">Нет аккаунта?</span>
-            <a id="switchLink">Регистрация</a>
+<div class="container">
+    <div class="card">
+        <h2>Пользователи</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Логин</th>
+                        <th>Роль</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="usersBody">
+                    <tr><td colspan="3">Загрузка...</td></tr>
+                </tbody>
+            </table>
         </div>
-
-        <div class="msg" id="msg"></div>
-
-        <div class="back">
-            <a href="/">← На главную</a>
-        </div>
+        <div id="msg" class="msg"></div>
     </div>
 </div>
 
@@ -251,8 +231,7 @@
     <div id="menuContent"></div>
 </aside>
 
-<script src="/static/js/auth.js"></script>
+<script src="/static/js/admin_users.js"></script>
 <script src="/static/js/menu.js"></script>
-
 </body>
 </html>

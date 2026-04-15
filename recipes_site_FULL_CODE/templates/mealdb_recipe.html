@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>TheMealDB рецепт</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/static/js/theme.js"></script>
+    <style>
+        :root {
+            --accent: #ff7043;
+            --accent2: #f06232;
+            --bg: #f4f4f4;
+            --bg2: #fff4f0;
+            --text: #222;
+            --muted: #666;
+            --card: #ffffff;
+            --border: #e5e5e5;
+            --field: #ffffff;
+            --shadow: 0 12px 30px rgba(0,0,0,0.10);
+        }
+        html[data-theme="dark"] {
+            --bg: #0f1115;
+            --bg2: #121522;
+            --text: #e7e9ee;
+            --muted: #a7acb9;
+            --card: #151925;
+            --border: rgba(255,255,255,0.12);
+            --field: #0f1320;
+            --shadow: 0 14px 34px rgba(0,0,0,0.55);
+        }
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 40%, var(--bg) 100%);
+            color: var(--text);
+        }
+        .header {
+            background: var(--accent);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .site-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 10px;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .card img {
+            display: block;
+            width: 100%;
+            height: 320px;
+            object-fit: cover;
+        }
+        .content { padding: 16px 18px; }
+        .meta { color: var(--muted); font-size: 13px; margin: 6px 0 14px; }
+        .links a {
+            display: inline-block;
+            margin-right: 8px;
+            margin-top: 6px;
+            background: rgba(255,112,67,0.10);
+            border: 1px solid rgba(255,112,67,0.22);
+            color: var(--text);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 13px;
+        }
+        ul, ol { padding-left: 20px; }
+        @media (max-width: 520px) {
+            .header { padding: 10px 14px; }
+            .container { margin: 14px auto; }
+            .card img { height: 220px; }
+            .content { padding: 14px; }
+        }
+    </style>
+</head>
+<body>
+<header class="header">
+    <a class="site-link" href="/">Кулинарные рецепты</a>
+    <a class="site-link" href="/">На главную</a>
+</header>
+<div class="container">
+    <div class="card">
+        <div id="hero"></div>
+        <div class="content">
+            <h1 id="title">Загрузка…</h1>
+            <div class="meta" id="meta"></div>
+            <div class="links" id="links"></div>
+            <h3>Ингредиенты</h3>
+            <ul id="ingredients"></ul>
+            <h3>Шаги приготовления</h3>
+            <ol id="steps"></ol>
+        </div>
+    </div>
+</div>
+
+<script>
+  window.__MEAL_ID__ = "{{ meal_id }}";
+</script>
+<script src="/static/js/mealdb.js"></script>
+</body>
+</html>

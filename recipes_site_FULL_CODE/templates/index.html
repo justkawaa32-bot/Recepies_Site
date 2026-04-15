@@ -4,12 +4,39 @@
     <meta charset="UTF-8">
     <title>Кулинарные рецепты</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/static/js/theme.js"></script>
     <style>
         body {
             margin: 0;
             font-family: Arial, Helvetica, sans-serif;
-            background: #f4f4f4;
+            background: linear-gradient(180deg, #fff4f0 0%, #f4f4f4 40%, #f4f4f4 100%);
             color: #222;
+        }
+        :root {
+            --accent: #ff7043;
+            --accent2: #f06232;
+            --shadow: 0 10px 26px rgba(0,0,0,0.10);
+            --bg: #f4f4f4;
+            --bg2: #fff4f0;
+            --text: #222;
+            --muted: #666;
+            --card: #ffffff;
+            --border: #e6e6e6;
+            --field: #ffffff;
+        }
+        html[data-theme="dark"] {
+            --bg: #0f1115;
+            --bg2: #121522;
+            --text: #e7e9ee;
+            --muted: #a7acb9;
+            --card: #151925;
+            --border: rgba(255,255,255,0.12);
+            --field: #0f1320;
+            --shadow: 0 14px 34px rgba(0,0,0,0.55);
+        }
+        body {
+            background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 40%, var(--bg) 100%);
+            color: var(--text);
         }
         header {
             background: #ff7043;
@@ -22,11 +49,15 @@
             margin: 0;
             font-size: 22px;
         }
+        .site-link {
+            color: white;
+            text-decoration: none;
+        }
         header a {
             margin-left: auto;
             color: white;
             text-decoration: none;
-            background: rgba(255,255,255,0.2);
+            /*background: rgba(255,255,255,0.2);*/
             padding: 8px 12px;
             border-radius: 6px;
         }
@@ -35,6 +66,73 @@
             margin: 20px auto;
             padding: 0 10px;
         }
+        .filters {
+            background: var(--card);
+            border: 1px solid rgba(255,255,255,0.7);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            padding: 12px;
+            margin-bottom: 14px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            animation: fadeDown 0.35s ease both;
+        }
+        .filters-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+        @media (max-width: 760px) {
+            .filters-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .filters .field label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+        .filters .field input,
+        .filters .field select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--field);
+            color: var(--text);
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+        }
+        .filters .field input:focus,
+        .filters .field select:focus {
+            border-color: rgba(255,112,67,0.65);
+            box-shadow: 0 0 0 4px rgba(255,112,67,0.16);
+            transform: translateY(-1px);
+        }
+        .filters button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 9px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+        }
+        .filters button:hover {
+            background: var(--accent2);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(255,112,67,0.22);
+        }
+        .filters-hint {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
         .recipe {
             background: white;
             border-radius: 8px;
@@ -42,11 +140,205 @@
             margin-bottom: 15px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         }
+        .recipes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+        }
+        .recipe-card {
+            display: block;
+            background: var(--card);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            color: inherit;
+            text-decoration: none;
+            overflow: hidden;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+            position: relative;
+        }
+        .skeleton-card {
+            background: var(--card);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .skeleton-shimmer {
+            position: relative;
+            overflow: hidden;
+            background: rgba(127,127,127,0.14);
+        }
+        .skeleton-shimmer::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            transform: translateX(-100%);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+            animation: skeletonShift 1.2s infinite;
+        }
+        .skeleton-img { height: 160px; }
+        .skeleton-content { padding: 12px 14px 14px; }
+        .skeleton-line { height: 12px; border-radius: 8px; margin-bottom: 8px; }
+        .skeleton-line.title { height: 18px; width: 70%; }
+        .skeleton-line.meta { width: 45%; }
+        .skeleton-badges { display: flex; gap: 6px; margin-top: 6px; }
+        .skeleton-badge { width: 66px; height: 20px; border-radius: 999px; }
+        .fade-in-list { animation: contentFadeIn .25s ease both; }
+        .recipe-card.reveal {
+            animation: fadeUp 0.4s ease both;
+        }
+        .recipe-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+        }
+        .recipe-card:active {
+            transform: translateY(0);
+        }
+        .recipe-card img {
+            display: block;
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+        .recipe-card .content {
+            padding: 12px 14px 14px;
+        }
+        .recipe-card h3 {
+            margin: 0 0 8px;
+            font-size: 18px;
+        }
+        .recipe-card .meta {
+            margin-bottom: 0;
+        }
+        .add-card {
+            border: 2px dashed var(--accent);
+            background: var(--card);
+            text-align: center;
+        }
+        .add-card .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+        .add-card .meta {
+            color: #a3523a;
+        }
+        .add-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            background: #ff7043;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-top: 10px;
+        }
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .badge {
+            font-size: 12px;
+            background: #ffe0d6;
+            color: #9a3b1f;
+            padding: 4px 8px;
+            border-radius: 999px;
+        }
+        .pagination {
+            margin: 10px 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .pagination button {
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 10px;
+            cursor: pointer;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+        .fav-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.92);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+            transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+        }
+        .fav-btn:hover {
+            transform: translateY(-1px) scale(1.02);
+        }
+        .fav-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+        .fav-btn span {
+            font-size: 18px;
+            line-height: 1;
+            color: #ff7043;
+        }
+        .fav-btn[data-active="1"] {
+            background: #ff7043;
+            border-color: #ff7043;
+        }
+        .fav-btn[data-active="1"] span {
+            color: #fff;
+        }
+        @media (max-width: 520px) {
+            .container { margin: 14px auto; }
+            .filters { padding: 10px; border-radius: 12px; }
+            .filters-row { grid-template-columns: 1fr; gap: 8px; }
+            .filters button { width: 100%; }
+            h2 { margin: 14px 0 10px; }
+            .recipes-grid { grid-template-columns: 1fr; gap: 12px; }
+            .recipe-card img { height: 150px; }
+            .recipe-card h3 { font-size: 16px; }
+            .fav-btn { top: 8px; right: 8px; width: 36px; height: 36px; }
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes skeletonShift {
+            100% { transform: translateX(100%); }
+        }
+        @keyframes contentFadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            * { animation: none !important; transition: none !important; }
+        }
         .recipe h3 {
             margin-top: 0;
         }
         .meta {
-            color: #666;
+            color: var(--muted);
             font-size: 13px;
             margin-bottom: 10px;
         }
@@ -61,7 +353,7 @@
         footer {
             text-align: center;
             padding: 15px;
-            color: #777;
+            color: var(--muted);
             font-size: 13px;
         }
         .header {
@@ -78,156 +370,176 @@
     font-size: 22px;
 }
 
-.auth-area {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.auth-area a,
-.auth-area button {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: none;
-    padding: 7px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.auth-area a:hover,
-.auth-area button:hover {
-    background: rgba(255, 255, 255, 0.35);
-}
+        .menu-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 999px;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+        }
+        .menu-button svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+        .menu-panel {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            height: 100%;
+            background: var(--card);
+            box-shadow: -6px 0 16px rgba(0,0,0,0.18);
+            transition: right 0.2s ease;
+            z-index: 1001;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .menu-panel.open {
+            right: 0;
+        }
+        .menu-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 1000;
+        }
+        .menu-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .menu-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--text);
+        }
+        .menu-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            background: #ffe0d6;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #9a3b1f;
+        }
+        .menu-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+        .menu-link {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            text-decoration: none;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .menu-link:hover {
+            background: rgba(255,112,67,0.10);
+        }
+        .menu-theme {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: rgba(255,112,67,0.06);
+        }
+        .menu-theme-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--text);
+        }
+        .menu-theme-row input {
+            width: 44px;
+            height: 24px;
+            accent-color: var(--accent);
+        }
 
     </style>
 </head>
 <body>
 
 <header class="header">
-    <h1 class="logo">Кулинарные рецепты</h1>
-    <div id="authArea" class="auth-area"></div>
+    <a class="logo site-link" href="/">Кулинарные рецепты</a>
+    <button id="menuButton" class="menu-button" type="button" aria-label="Меню">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"></path>
+        </svg>
+    </button>
 </header>
 
 
 
 <div class="container">
+    <div class="filters">
+        <div class="filters-row">
+            <div class="field">
+                <label for="searchQuery">Поиск</label>
+                <input id="searchQuery" placeholder="Название, ингредиенты, категория...">
+            </div>
+            <div class="field">
+                <label for="filterCategory">Категория</label>
+                <input id="filterCategory" placeholder="Например: Breakfast">
+            </div>
+            <div class="field">
+                <label for="filterArea">Страна</label>
+                <input id="filterArea" placeholder="Например: Italian">
+            </div>
+            <div class="field">
+                <label for="filterIngredient">Ингредиент</label>
+                <input id="filterIngredient" placeholder="Например: chicken">
+            </div>
+            <div class="field">
+                <label>&nbsp;</label>
+                <button id="resetFilters" type="button">Сброс</button>
+            </div>
+        </div>
+    </div>
     <h2>Список рецептов</h2>
-    <div id="recipes">Загрузка...</div>
+    <div id="recipes" class="recipes-grid">Загрузка...</div>
+    <div id="recipesPagination" class="pagination"></div>
 </div>
 
 <footer>
     Проект по информатике, 10 класс
 </footer>
 
-<script>
-    async function loadRecipes() {
-        try {
-            const response = await fetch('/api/recipes', { credentials: 'include' });
-            const data = await response.json();
+<div id="menuBackdrop" class="menu-backdrop"></div>
+<aside id="menuPanel" class="menu-panel" aria-label="Меню">
+    <div id="menuContent"></div>
+</aside>
 
-            const container = document.getElementById('recipes');
-            container.innerHTML = '';
-
-            if (data.length === 0) {
-                container.innerHTML = '<p>Рецептов пока нет.</p>';
-                return;
-            }
-
-            data.forEach(r => {
-                const div = document.createElement('div');
-                div.className = 'recipe';
-
-                div.innerHTML = `
-                    ${r.img ? `<img src="${r.img}" alt="">` : ''}
-                    <h3>${escapeHtml(r.title)}</h3>
-                    <div class="meta">
-                        Категория: ${escapeHtml(r.category || '—')} |
-                        Время: ${r.time || 0} мин |
-                        Сложность: ${escapeHtml(r.level || '—')} |
-                        Автор: ${escapeHtml(r.author || '—')}
-                    </div>
-                    <h4>Ингредиенты:</h4>
-                    <ul>
-                        ${(r.ingredients || []).map(i => `<li>${escapeHtml(i)}</li>`).join('')}
-                    </ul>
-                    <h4>Шаги приготовления:</h4>
-                    <ol>
-                        ${(r.steps || []).map(s => `<li>${escapeHtml(s)}</li>`).join('')}
-                    </ol>
-                `;
-                container.appendChild(div);
-            });
-        } catch (e) {
-            document.getElementById('recipes').innerHTML = '<p>Ошибка загрузки рецептов</p>';
-        }
-    }
-
-    function escapeHtml(text) {
-        return String(text)
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;');
-    }
-
-    loadRecipes();
-</script>
-<script>
-    const authArea = document.getElementById('authArea');
-
-    async function checkAuth() {
-        try {
-            const res = await fetch('/api/whoami', {
-                credentials: 'include'
-            });
-            const data = await res.json();
-
-            if (data.ok) {
-                // пользователь вошёл
-                authArea.innerHTML = `
-                    <span>Привет, <b>${escapeHtml(data.user.username)}</b></span>
-                    <button type="button" onclick="logout()">Выйти</button>
-                `;
-            } else {
-                // не вошёл
-                authArea.innerHTML = `<a href="/auth">Войти</a>`;
-            }
-        } catch (e) {
-            authArea.innerHTML = `<a href="/auth">Войти</a>`;
-        }
-    }
-
-    async function logout() {
-        await fetch('/api/logout', {
-            method: 'POST',
-            credentials: 'include'
-        });
-        location.reload();
-    }
-
-    checkAuth();
-</script>
-<script>
-async function logout() {
-    try {
-        const res = await fetch('/api/logout', {
-            method: 'POST',
-            credentials: 'include'
-        });
-
-        if (res.ok) {
-            // полностью обновляем страницу и состояние сессии
-            window.location.href = '/';
-        } else {
-            alert('Ошибка выхода');
-        }
-    } catch (e) {
-        alert('Сервер недоступен');
-    }
-}
-</script>
+<script src="/static/js/index.js"></script>
+<script src="/static/js/menu.js"></script>
 
 </body>
 </html>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if recipe %}{{ recipe.title }}{% else %}Рецепт не найден{% endif %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/static/js/theme.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        :root {
+            --accent: #ff7043;
+            --accent2: #f06232;
+            --shadow: 0 12px 30px rgba(0,0,0,0.10);
+            --bg: #f4f4f4;
+            --text: #222;
+            --muted: #666;
+            --card: #ffffff;
+            --border: #e5e5e5;
+            --field: #ffffff;
+        }
+        html[data-theme="dark"] {
+            --bg: #0f1115;
+            --text: #e7e9ee;
+            --muted: #a7acb9;
+            --card: #151925;
+            --border: rgba(255,255,255,0.12);
+            --field: #0f1320;
+            --shadow: 0 14px 34px rgba(0,0,0,0.55);
+        }
+        .header {
+            background: #ff7043;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .site-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .menu-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 999px;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+        }
+        .menu-button svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+        .menu-panel {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            height: 100%;
+            background: var(--card);
+            box-shadow: -6px 0 16px rgba(0,0,0,0.18);
+            transition: right 0.2s ease;
+            z-index: 1001;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .menu-panel.open {
+            right: 0;
+        }
+        .menu-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 1000;
+        }
+        .menu-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .menu-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--text);
+        }
+        .menu-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            background: #ffe0d6;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #9a3b1f;
+        }
+        .menu-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+        .menu-link {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            text-decoration: none;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .menu-link:hover {
+            background: rgba(255,112,67,0.10);
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 10px;
+        }
+        .card {
+            background: white;
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            animation: fadeUp 0.35s ease both;
+        }
+        .card img {
+            display: block;
+            width: 100%;
+            height: 320px;
+            object-fit: cover;
+        }
+        .content {
+            padding: 16px 18px;
+        }
+        .meta {
+            color: var(--muted);
+            font-size: 13px;
+            margin: 6px 0 14px;
+        }
+        .meta button {
+            margin-left: 8px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+        }
+        .meta .action-link {
+            margin-left: 8px;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+        }
+        .meta button:hover {
+            background: var(--accent2);
+            transform: translateY(-1px);
+            box-shadow: 0 12px 22px rgba(255,112,67,0.18);
+        }
+        .meta .action-link:hover {
+            background: var(--accent2);
+            transform: translateY(-1px);
+            box-shadow: 0 12px 22px rgba(255,112,67,0.18);
+        }
+        ul, ol {
+            padding-left: 20px;
+        }
+        .empty {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        .rating-line {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        .stars {
+            display: inline-flex;
+            gap: 2px;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+        .reviews {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+        .review-form {
+            background: rgba(255,112,67,0.08);
+            border: 1px solid rgba(255,112,67,0.22);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            animation: fadeUp 0.25s ease both;
+        }
+        .review-form .row {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+        @media (max-width: 640px) {
+            .review-form .row {
+                grid-template-columns: 1fr;
+            }
+        }
+        .review-form select, .review-form textarea {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--field);
+            color: var(--text);
+            box-sizing: border-box;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.12s ease, box-shadow 0.12s ease, transform 0.12s ease;
+        }
+        .review-form select:focus,
+        .review-form textarea:focus {
+            border-color: rgba(255,112,67,0.65);
+            box-shadow: 0 0 0 4px rgba(255,112,67,0.16);
+            transform: translateY(-1px);
+        }
+        .review-form textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .review-form .actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 8px;
+        }
+        @media (max-width: 520px) {
+            .header { padding: 10px 14px; }
+            .container { margin: 14px auto; }
+            .card { border-radius: 12px; }
+            .card img { height: 220px; }
+            .content { padding: 14px; }
+            h1 { font-size: 22px; margin: 0 0 8px; }
+            .meta { line-height: 1.5; }
+            .rating-line { display: flex; flex-wrap: wrap; gap: 6px; }
+            .review-form .actions { flex-wrap: wrap; }
+            .review-form button { width: 100%; }
+            .review-form button.secondary { width: 100%; }
+        }
+        .review-form button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+        }
+        .review-form button:hover {
+            background: var(--accent2);
+            transform: translateY(-1px);
+            box-shadow: 0 12px 22px rgba(255,112,67,0.18);
+        }
+        .review-form button.secondary {
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .review-form button.secondary:hover {
+            background: #fff6f2;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 18px rgba(0,0,0,0.08);
+        }
+        .review-form .msg {
+            font-size: 13px;
+            color: #c0392b;
+        }
+        .review-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            transform: translateY(4px);
+            opacity: 0;
+            animation: reviewIn 0.32s ease both;
+        }
+        .review-item:nth-child(1) { animation-delay: 0ms; }
+        .review-item:nth-child(2) { animation-delay: 40ms; }
+        .review-item:nth-child(3) { animation-delay: 80ms; }
+        .review-item:nth-child(4) { animation-delay: 120ms; }
+        .review-item:nth-child(5) { animation-delay: 160ms; }
+        .review-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        .review-text {
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes reviewIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            * { animation: none !important; transition: none !important; }
+            .review-item { opacity: 1 !important; transform: none !important; }
+        }
+    </style>
+</head>
+<body {% if recipe %}data-recipe-id="{{ recipe.id }}" data-recipe-avg="{{ recipe.avg_rating or 0 }}" data-recipe-reviews-count="{{ recipe.reviews_count or 0 }}"{% endif %}>
+
+<header class="header">
+    <a class="site-link" href="/">Кулинарные рецепты</a>
+    <button id="menuButton" class="menu-button" type="button" aria-label="Меню">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"></path>
+        </svg>
+    </button>
+</header>
+
+<div class="container">
+    {% if recipe %}
+        <div class="card">
+            <img src="{{ recipe.img or '/static/images/placeholder.svg' }}" alt="{{ recipe.title }}">
+            <div class="content">
+                <h1>{{ recipe.title }}</h1>
+                <div class="meta">
+                    Категория: {{ recipe.category or '—' }} |
+                    Время: {{ recipe.time_min or 0 }} мин |
+                    Сложность: {{ recipe.level or '—' }} |
+                    Автор: {{ recipe.username or '—' }}
+                    <div class="rating-line">
+                        <span class="stars" id="ratingStars">★★★★★</span>
+                        <span id="ratingText">0.0 (0)</span>
+                    </div>
+                </div>
+                {% if is_staff %}
+                    <div class="meta">
+                        <a class="action-link" href="/edit/{{ recipe.id }}">Редактировать</a>
+                        <button type="button" id="deleteBtn" data-recipe-id="{{ recipe.id }}">Удалить</button>
+                    </div>
+                {% endif %}
+                <h3>Ингредиенты</h3>
+                <ul>
+                    {% for item in recipe.ingredients %}
+                        <li>{{ item }}</li>
+                    {% else %}
+                        <li>—</li>
+                    {% endfor %}
+                </ul>
+                <h3>Шаги приготовления</h3>
+                <ol>
+                    {% for step in recipe.steps %}
+                        <li>{{ step }}</li>
+                    {% else %}
+                        <li>—</li>
+                    {% endfor %}
+                </ol>
+
+                <div class="reviews">
+                    <h3>Отзывы</h3>
+                    <div id="reviewForm" class="review-form" style="display:none">
+                        <div class="row">
+                            <div>
+                                <label for="myRating">Оценка</label>
+                                <select id="myRating">
+                                    <option value="5">5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                    <option value="1">1</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="myText">Отзыв</label>
+                                <textarea id="myText" placeholder="Напишите отзыв (необязательно)"></textarea>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <button id="saveReviewBtn" type="button">Сохранить</button>
+                            <button id="deleteReviewBtn" class="secondary" type="button">Удалить</button>
+                            <span id="reviewMsg" class="msg"></span>
+                        </div>
+                    </div>
+                    <div id="reviewsList">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty">Рецепт не найден.</div>
+    {% endif %}
+</div>
+
+<div id="menuBackdrop" class="menu-backdrop"></div>
+<aside id="menuPanel" class="menu-panel" aria-label="Меню">
+    <div id="menuContent"></div>
+</aside>
+
+{% if is_staff and recipe %}
+<script src="/static/js/recipe_detail.js"></script>
+{% endif %}
+{% if recipe %}
+<script>
+  window.__RECIPE_ID__ = Number(document.body.dataset.recipeId || 0);
+  window.__RECIPE_AVG__ = Number(document.body.dataset.recipeAvg || 0);
+  window.__RECIPE_REVIEWS_COUNT__ = Number(document.body.dataset.recipeReviewsCount || 0);
+</script>
+<script src="/static/js/reviews.js"></script>
+{% endif %}
+<script src="/static/js/menu.js"></script>
+</body>
+</html>

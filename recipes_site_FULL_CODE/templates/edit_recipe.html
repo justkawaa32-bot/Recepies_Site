@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактировать рецепт</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/static/js/theme.js"></script>
+    <style>
+        :root {
+            --accent: #ff7043;
+            --accent2: #f06232;
+            --bg: #f4f4f4;
+            --bg2: #fff4f0;
+            --text: #222;
+            --muted: #666;
+            --card: #ffffff;
+            --border: #e5e5e5;
+            --field: #ffffff;
+        }
+        html[data-theme="dark"] {
+            --bg: #0f1115;
+            --bg2: #121522;
+            --text: #e7e9ee;
+            --muted: #a7acb9;
+            --card: #151925;
+            --border: rgba(255,255,255,0.12);
+            --field: #0f1320;
+        }
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(180deg, var(--bg2) 0%, var(--bg) 40%, var(--bg) 100%);
+            color: var(--text);
+        }
+        .header {
+            background: var(--accent);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .site-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .menu-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 999px;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+        }
+        .menu-button svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+        .menu-panel {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            height: 100%;
+            background: var(--card);
+            box-shadow: -6px 0 16px rgba(0,0,0,0.18);
+            transition: right 0.2s ease;
+            z-index: 1001;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .menu-panel.open {
+            right: 0;
+        }
+        .menu-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 1000;
+        }
+        .menu-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .menu-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--text);
+        }
+        .menu-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            background: #ffe0d6;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #9a3b1f;
+        }
+        .menu-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+        .menu-link {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            text-decoration: none;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .menu-link:hover {
+            background: rgba(255,112,67,0.10);
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 10px;
+        }
+        .add-recipe {
+            background: var(--card);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            padding: 16px;
+        }
+        .add-recipe h2 {
+            margin-top: 0;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .field label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: var(--muted);
+        }
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--field);
+            color: var(--text);
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .field textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .preview {
+            margin-top: 10px;
+            background: #fafafa;
+            border: 1px dashed #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .preview img {
+            max-width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .form-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .form-actions button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .form-actions button:hover {
+            background: var(--accent2);
+        }
+        .form-msg {
+            font-size: 13px;
+            color: #c0392b;
+        }
+        @media (max-width: 520px) {
+            .header { padding: 10px 14px; }
+            .container { margin: 14px auto; }
+            .add-recipe { padding: 14px; }
+            .form-row { grid-template-columns: 1fr; gap: 8px; }
+            .preview img { height: 180px; }
+            .form-actions { flex-wrap: wrap; }
+            .form-actions button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <a class="site-link" href="/">Кулинарные рецепты</a>
+    <button id="menuButton" class="menu-button" type="button" aria-label="Меню">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"></path>
+        </svg>
+    </button>
+</header>
+
+<div class="container">
+    <div class="add-recipe">
+        <h2>Редактировать рецепт</h2>
+        <form id="recipeForm" data-recipe-id="{{ recipe_id }}">
+            <div class="form-row">
+                <div class="field">
+                    <label for="title">Название *</label>
+                    <input id="title" name="title" required>
+                </div>
+                <div class="field">
+                    <label for="category">Категория</label>
+                    <input id="category" name="category" placeholder="Например: Завтраки">
+                </div>
+                <div class="field">
+                    <label for="time_min">Время (мин)</label>
+                    <input id="time_min" name="time_min" type="number" min="1">
+                </div>
+                <div class="field">
+                    <label for="level">Сложность</label>
+                    <select id="level" name="level">
+                        <option value="">—</option>
+                        <option>Легкая</option>
+                        <option>Средняя</option>
+                        <option>Сложная</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label for="ingredients">Ингредиенты (по одному в строке)</label>
+                    <textarea id="ingredients" name="ingredients"></textarea>
+                </div>
+                <div class="field">
+                    <label for="steps">Шаги (по одному в строке)</label>
+                    <textarea id="steps" name="steps"></textarea>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label for="image">Фото (заменить)</label>
+                    <input id="image" name="image" type="file" accept="image/*">
+                </div>
+            </div>
+            <div class="preview" id="imagePreview">Текущее изображение</div>
+            <div class="form-actions">
+                <button type="submit">Сохранить</button>
+                <button type="button" id="deleteBtn">Удалить</button>
+                <span id="formMsg" class="form-msg"></span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="menuBackdrop" class="menu-backdrop"></div>
+<aside id="menuPanel" class="menu-panel" aria-label="Меню">
+    <div id="menuContent"></div>
+</aside>
+
+<script src="/static/js/edit_recipe.js"></script>
+<script src="/static/js/menu.js"></script>
+</body>
+</html>
